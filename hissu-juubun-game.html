@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<!-- スマホ対応：画面幅に合わせて表示 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>必要条件・十分条件クイズ | 数学Ⅰ</title>
+<style>
+  /* ===== 全体のデザイン設定 ===== */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    /* ゲームっぽい夜空グラデーション背景 */
+    background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+  }
+
+  /* ゲーム画面の枠 */
+  .game-box {
+    width: 100%;
+    max-width: 520px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 24px 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    text-align: center;
+  }
+
+  /* ===== ヘッダー（タイトル・スコア） ===== */
+  h1 {
+    font-size: 1.15rem;
+    color: #ffd966;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: #a8dadc;
+  }
+
+  /* 進捗バー */
+  .progress-wrap {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4cc9f0, #4361ee);
+    transition: width 0.4s ease;
+  }
+
+  /* ===== 問題表示エリア ===== */
+  .question-area {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 14px;
+    padding: 24px 12px;
+    margin-bottom: 8px;
+    min-height: 90px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 1.3rem;
+    font-weight: bold;
+  }
+
+  /* （　）の部分を目立たせる */
+  .blank {
+    color: #ffd966;
+    border-bottom: 3px solid #ffd966;
+    min-width: 56px;
+    display: inline-block;
+  }
+
+  /* 条件（x実数 など）の注記 */
+  .note {
+    font-size: 0.8rem;
+    color: #a8dadc;
+    margin-bottom: 16px;
+    min-height: 1.2em;
+  }
+
+  /* ===== 回答ボタン ===== */
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4つ横並び（スマホでも押しやすい） */
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .ans-btn {
+    font-size: 1.6rem;
+    font-weight: bold;
+    padding: 16px 0;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #4361ee, #3a0ca3);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 4px 0 #240a70; /* 押しごたえのある立体感 */
+    touch-action: manipulation; /* スマホでのダブルタップ拡大防止 */
+  }
+  .ans-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #240a70;
+  }
+  .ans-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  /* ボタンの意味の説明（凡例） */
+  .legend {
+    font-size: 0.72rem;
+    color: #a8dadc;
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  /* 語呂合わせの強調ボックス */
+  .goro {
+    background: rgba(255, 217, 102, 0.15);       /* 黄色の淡い背景で目立たせる */
+    border: 2px solid #ffd966;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    color: #ffd966;
+    font-weight: bold;
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+  .goro .goro-title {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+  }
+  .goro .hi {
+    color: #ff6b6b;          /* 「ひ」をさらに赤で強調 */
+    font-size: 1.1em;
+  }
+
+  /* ===== 判定表示（○×と理由） ===== */
+  .judge {
+    font-size: 3.2rem;
+    font-weight: bold;
+    min-height: 1.2em;
+    line-height: 1.2;
+  }
+  .judge.correct { color: #06d6a0; }  /* 正解は緑 */
+  .judge.wrong   { color: #ef476f; }  /* 不正解は赤 */
+
+  .reason {
+    font-size: 0.9rem;
+    color: #f1faee;
+    min-height: 3em;
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  /* 正解時にポップするアニメーション */
+  @keyframes pop {
+    0%   { transform: scale(0.3); opacity: 0; }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1);   opacity: 1; }
+  }
+  .pop { animation: pop 0.3s ease-out; }
+
+  /* ===== コンボ（連続正解）表示 ===== */
+  .combo {
+    color: #ff9f1c;          /* 炎っぽいオレンジで表示 */
+    font-weight: bold;
+  }
+  /* コンボが伸びたときに弾むアニメーション */
+  @keyframes comboJump {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.5); }
+    100% { transform: scale(1); }
+  }
+  .combo-jump {
+    display: inline-block;
+    animation: comboJump 0.3s ease-out;
+  }
+
+  /* ===== 結果画面 ===== */
+  .result-screen { display: none; }
+
+  /* ランク（S〜D）の大きな文字 */
+  .rank-label {
+    font-size: 0.9rem;
+    color: #a8dadc;
+    margin-top: 12px;
+  }
+  .rank {
+    font-size: 5rem;
+    font-weight: bold;
+    line-height: 1.1;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px currentColor; /* ランク文字を光らせる */
+    animation: pop 0.5s ease-out;
+  }
+  /* ランクごとの色分け */
+  .rank-S { color: #ffd700; }  /* 金 */
+  .rank-A { color: #ff6b6b; }  /* 赤 */
+  .rank-B { color: #4cc9f0; }  /* 青 */
+  .rank-C { color: #06d6a0; }  /* 緑 */
+  .rank-D { color: #adb5bd; }  /* 灰 */
+
+  .result-score {
+    font-size: 2.4rem;
+    color: #ffd966;
+    margin: 8px 0;
+    font-weight: bold;
+  }
+
+  /* 正答率・最大コンボなどの成績表 */
+  .stats {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin: 0 auto 16px;
+    max-width: 320px;
+    text-align: left;
+    font-size: 0.95rem;
+    line-height: 2;
+  }
+  .stats .row {
+    display: flex;
+    justify-content: space-between;
+  }
+  .stats .val { font-weight: bold; color: #ffd966; }
+
+  /* 新記録バッジ */
+  .new-record {
+    display: inline-block;
+    background: #ef476f;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 1px 8px;
+    margin-left: 6px;
+    animation: pop 0.4s ease-out;
+  }
+  .result-msg {
+    font-size: 1rem;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .retry-btn {
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffd166, #ef8354);
+    color: #1a1a2e;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b35c37;
+  }
+  .retry-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #b35c37;
+  }
+
+  /* 復習モードボタン（青系で最初から挑戦と区別） */
+  .review-btn {
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 14px 30px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #4cc9f0, #4361ee);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #240a70;
+  }
+  .review-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #240a70;
+  }
+
+  /* リザルト画面のボタンを縦に並べる */
+  .result-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  /* スマホの小さい画面向け微調整 */
+  @media (max-width: 380px) {
+    .question-area { font-size: 1.05rem; }
+    .ans-btn { font-size: 1.3rem; padding: 14px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="game-box">
+
+  <!-- ===== クイズ画面 ===== -->
+  <div id="quizScreen">
+    <h1>⚔️ 必要条件・十分条件クイズ ⚔️</h1>
+
+    <!-- スコアと問題番号 -->
+    <div class="status-bar">
+      <span id="qNumber">第1問 / 20</span>
+      <span class="combo" id="combo"></span>
+      <span id="score">スコア: 0</span>
+    </div>
+
+    <!-- 進捗バー -->
+    <div class="progress-wrap"><div class="progress-fill" id="progress"></div></div>
+
+    <!-- 問題文：「x=2 （　） x²=4」の形で表示 -->
+    <div class="question-area">
+      <span id="left"></span>
+      <span class="blank" id="blank">（　）</span>
+      <span id="right"></span>
+    </div>
+    <!-- 「x, y は実数」などの補足条件 -->
+    <div class="note" id="note"></div>
+
+    <!-- 4択回答ボタン -->
+    <div class="buttons">
+      <button class="ans-btn" data-ans="→">→</button>
+      <button class="ans-btn" data-ans="←">←</button>
+      <button class="ans-btn" data-ans="⇔">⇔</button>
+      <button class="ans-btn" data-ans="×">×</button>
+    </div>
+
+    <!-- ボタンの意味の説明 -->
+    <div class="legend">
+      →：左は右の十分条件 ／ ←：左は右の必要条件<br>
+      ⇔：左は右の必要十分条件 ／ ×：どちらでもない
+    </div>
+
+    <!-- 語呂合わせ（覚え方のコツを目立たせて表示） -->
+    <div class="goro">
+      <span class="goro-title">💡 語呂合わせで覚えよう！</span><br>
+      <span class="hi">必</span>要条件は「<span class="hi">ひ</span>」がつくから矢印は左向き（←）！
+    </div>
+
+    <!-- ○×判定と理由の表示エリア -->
+    <div class="judge" id="judge"></div>
+    <div class="reason" id="reason"></div>
+  </div>
+
+  <!-- ===== 結果画面 ===== -->
+  <div id="resultScreen" class="result-screen">
+    <h1 id="resultTitle">🏆 リザルト 🏆</h1>
+
+    <!-- S〜D の評価ランク -->
+    <div class="rank-label">評価</div>
+    <div class="rank" id="rank"></div>
+
+    <div class="result-score" id="finalScore"></div>
+
+    <!-- 正答率・最大コンボ・最高記録の成績表 -->
+    <div class="stats">
+      <div class="row"><span>正答率</span><span class="val" id="statRate"></span></div>
+      <div class="row"><span>最大コンボ</span><span class="val" id="statCombo"></span></div>
+      <div class="row"><span>最高スコア</span><span class="val" id="statBestScore"></span></div>
+      <div class="row"><span>最高コンボ記録</span><span class="val" id="statBestCombo"></span></div>
+    </div>
+
+    <div class="result-msg" id="finalMsg"></div>
+
+    <!-- 復習モード（間違いがあるときだけ表示）と再挑戦ボタン -->
+    <div class="result-buttons">
+      <button class="review-btn" id="reviewBtn" onclick="startReview()"></button>
+      <button class="retry-btn" onclick="startGame()">最初から挑戦！</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// 問題データ（20問固定）
+// l: 左の条件 / r: 右の条件 / note: 補足条件
+// ans: 正解（→ ← ⇔ ×）/ reason: 1行の理由
+// ============================================================
+const QUESTIONS = [
+  // --- 正解が「→」（左⇒右だけ成り立つ）---
+  { l: "x = 2",  r: "x² = 4",  note: "x は実数", ans: "→",
+    reason: "x=2なら必ずx²=4。でも x=−2 でも x²=4 なので逆は不成立。" },
+  { l: "x > 2",  r: "x > 0",   note: "x は実数", ans: "→",
+    reason: "x>2なら必ずx>0。でも x=1 は x>0 だが x>2 ではない。" },
+  { l: "x は 4 の倍数", r: "x は 2 の倍数", note: "x は整数", ans: "→",
+    reason: "4の倍数は必ず2の倍数。でも 6 は2の倍数だが4の倍数ではない。" },
+  { l: "△ABC は正三角形", r: "△ABC は二等辺三角形", note: "", ans: "→",
+    reason: "正三角形は必ず二等辺三角形。逆は成り立たない。" },
+  { l: "x > 0 かつ y > 0", r: "x + y > 0", note: "x, y は実数", ans: "→",
+    reason: "両方正なら和も正。でも x=3, y=−1 でも和は正になる。" },
+
+  // --- 正解が「←」（右⇒左だけ成り立つ）---
+  { l: "x² = 9",  r: "x = 3",  note: "x は実数", ans: "←",
+    reason: "x=3ならx²=9。でも x²=9 の解には x=−3 もある。" },
+  { l: "xy = 0",  r: "x = 0",  note: "x, y は実数", ans: "←",
+    reason: "x=0ならxy=0。でも y=0 でも xy=0 になる。" },
+  { l: "|x| = 5", r: "x = 5",  note: "x は実数", ans: "←",
+    reason: "x=5なら|x|=5。でも x=−5 でも |x|=5。" },
+  { l: "x ≧ 0",   r: "x > 0",  note: "x は実数", ans: "←",
+    reason: "x>0ならx≧0。でも x=0 は x≧0 だが x>0 ではない。" },
+  { l: "x² > 0",  r: "x > 0",  note: "x は実数", ans: "←",
+    reason: "x>0ならx²>0。でも x=−1 でも x²>0 になる。" },
+
+  // --- 正解が「⇔」（両方成り立つ）---
+  { l: "x³ = 1",  r: "x = 1",  note: "x は実数", ans: "⇔",
+    reason: "実数の範囲では x³=1 の解は x=1 ただ1つ。両方向成立。" },
+  { l: "x² + y² = 0", r: "x = 0 かつ y = 0", note: "x, y は実数", ans: "⇔",
+    reason: "実数の2乗は0以上なので、和が0なら両方0。両方向成立。" },
+  { l: "xy > 0",  r: "x と y が同符号", note: "x, y は実数", ans: "⇔",
+    reason: "積が正 ⇔ 2つの数の符号が同じ。両方向成立。" },
+  { l: "x は 6 の倍数", r: "x は 2 の倍数かつ 3 の倍数", note: "x は整数", ans: "⇔",
+    reason: "6の倍数 ⇔ 2でも3でも割り切れる数。両方向成立。" },
+  { l: "2x = 4",  r: "x = 2",  note: "x は実数", ans: "⇔",
+    reason: "2x=4を解くとx=2だけ。同値な式なので両方向成立。" },
+
+  // --- 正解が「×」（どちらも成り立たない）---
+  { l: "x > 0",   r: "x < 5",  note: "x は実数", ans: "×",
+    reason: "x=10 は左だけ成立、x=−1 は右だけ成立。どちらも不成立。" },
+  { l: "x > y",   r: "x² > y²", note: "x, y は実数", ans: "×",
+    reason: "x=1, y=−2 は左だけ成立、x=−2, y=1 は右だけ成立。" },
+  { l: "x は素数", r: "x は奇数", note: "x は自然数", ans: "×",
+    reason: "2 は素数だが偶数、9 は奇数だが素数ではない。" },
+  { l: "x + y > 0", r: "xy > 0", note: "x, y は実数", ans: "×",
+    reason: "x=2, y=−1 は左だけ成立、x=−1, y=−2 は右だけ成立。" },
+  { l: "x は 2 の倍数", r: "x は 3 の倍数", note: "x は整数", ans: "×",
+    reason: "4 は2の倍数だが3の倍数でない。9 はその逆。" },
+];
+
+// ============================================================
+// ゲームの状態管理
+// ============================================================
+let order = [];       // 出題順（シャッフルした問題の並び）
+let current = 0;      // 今何問目か
+let score = 0;        // 正解数
+let combo = 0;        // 現在の連続正解数
+let maxCombo = 0;     // 今回プレイ中の最大コンボ
+let answered = false; // 回答済みフラグ（連打防止）
+let wrongList = [];   // 今回のラウンドで間違えた問題（復習モード用）
+let isReview = false; // 復習モード中かどうか
+
+// 最高記録の保存キー（ブラウザのlocalStorageに保存され、次回も残る）
+const KEY_BEST_SCORE = "hj_bestScore";
+const KEY_BEST_COMBO = "hj_bestCombo";
+
+// 画面の各パーツを取得しておく
+const $ = (id) => document.getElementById(id);
+const btns = document.querySelectorAll(".ans-btn");
+
+// ============================================================
+// ラウンド開始の共通処理
+// pool: 出題する問題の配列 / review: 復習モードかどうか
+// ============================================================
+function startRound(pool, review) {
+  // 問題をシャッフルして出題順を決める（毎回順番が変わって飽きにくい）
+  order = [...pool].sort(() => Math.random() - 0.5);
+  isReview = review;
+  current = 0;
+  score = 0;
+  combo = 0;
+  maxCombo = 0;
+  wrongList = []; // このラウンドの間違いを新しく記録し直す
+  $("resultScreen").style.display = "none";
+  $("quizScreen").style.display = "block";
+  showQuestion();
+}
+
+// 最初から挑戦（全20問）
+function startGame() {
+  startRound(QUESTIONS, false);
+}
+
+// 復習モード（前のラウンドで間違えた問題だけ）
+function startReview() {
+  startRound(wrongList, true);
+}
+
+// ============================================================
+// コンボ表示を更新する（2連続以上で🔥付きで表示）
+// ============================================================
+function updateCombo(animate) {
+  const el = $("combo");
+  el.textContent = combo >= 2 ? `🔥${combo}連続!` : "";
+  // コンボが伸びた瞬間だけ弾むアニメーションを付ける
+  el.classList.remove("combo-jump");
+  if (animate && combo >= 2) {
+    void el.offsetWidth; // アニメーションを再発動させるためのリセット
+    el.classList.add("combo-jump");
+  }
+}
+
+// ============================================================
+// 問題を表示する
+// ============================================================
+function showQuestion() {
+  const q = order[current];
+  answered = false;
+
+  // 問題文・補足・番号・スコアを更新
+  $("left").textContent = q.l;
+  $("right").textContent = q.r;
+  $("blank").textContent = "（　）";
+  $("note").textContent = q.note ? `（${q.note}）` : "";
+  // 復習モードのときは見出しに「復習」を付ける
+  $("qNumber").textContent = `${isReview ? "📖復習 " : ""}第${current + 1}問 / ${order.length}`;
+  $("score").textContent = `スコア: ${score}`;
+  updateCombo(false); // コンボ表示を更新（アニメーションなし）
+
+  // 進捗バーを更新
+  $("progress").style.width = `${(current / order.length) * 100}%`;
+
+  // 判定表示をリセットし、ボタンを押せるようにする
+  $("judge").textContent = "";
+  $("judge").className = "judge";
+  $("reason").textContent = "";
+  btns.forEach((b) => (b.disabled = false));
+}
+
+// ============================================================
+// 回答ボタンが押されたときの処理
+// ============================================================
+btns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    if (answered) return; // 二重回答防止
+    answered = true;
+    btns.forEach((b) => (b.disabled = true)); // 全ボタンを無効化
+
+    const q = order[current];
+    const isCorrect = btn.dataset.ans === q.ans;
+
+    // （　）の中に選んだ記号を入れて見せる
+    $("blank").textContent = `（ ${q.ans} ）`;
+
+    // ○×を表示（正解なら○＋スコア加算＆コンボ加算、不正解なら×＆コンボリセット）
+    const judge = $("judge");
+    if (isCorrect) {
+      score++;
+      combo++;                                  // 連続正解数を伸ばす
+      maxCombo = Math.max(maxCombo, combo);     // 最大コンボを更新
+      judge.textContent = combo >= 3 ? `○ 正解！ ${combo}連続！` : "○ 正解！";
+      judge.className = "judge correct pop";
+    } else {
+      combo = 0;                                // 間違えたらコンボは途切れる
+      wrongList.push(q);                        // 間違えた問題を復習用に記録
+      judge.textContent = `× 正解は ${q.ans}`;
+      judge.className = "judge wrong pop";
+    }
+    $("score").textContent = `スコア: ${score}`;
+    updateCombo(true); // コンボ表示を更新（伸びたら弾むアニメーション付き）
+
+    // 理由を1行で表示
+    $("reason").textContent = q.reason;
+
+    // 3秒後に次の問題へ（最後なら結果画面へ）
+    setTimeout(() => {
+      current++;
+      if (current < order.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }, 3000);
+  });
+});
+
+// ============================================================
+// 結果画面を表示する
+// ============================================================
+function showResult() {
+  $("quizScreen").style.display = "none";
+  $("resultScreen").style.display = "block";
+  $("resultTitle").textContent = isReview ? "📖 復習リザルト 📖" : "🏆 リザルト 🏆";
+  $("finalScore").textContent = `${score} / ${order.length} 問正解`;
+
+  // --- 正答率を計算して表示 ---
+  const rate = score / order.length;
+  const ratePercent = Math.round(rate * 100);
+  $("statRate").textContent = `${ratePercent}%`;
+  $("statCombo").textContent = `${maxCombo}連続`;
+
+  // --- 正答率に応じてランク（S〜D）を判定 ---
+  // S:100% / A:80%以上 / B:60%以上 / C:40%以上 / D:それ未満
+  let rankChar;
+  if (rate === 1)        rankChar = "S";
+  else if (rate >= 0.8)  rankChar = "A";
+  else if (rate >= 0.6)  rankChar = "B";
+  else if (rate >= 0.4)  rankChar = "C";
+  else                   rankChar = "D";
+  const rankEl = $("rank");
+  rankEl.textContent = rankChar;
+  rankEl.className = `rank rank-${rankChar}`; // ランクごとに色を変える
+
+  // --- 最高記録（localStorage）を読み込み、更新されていれば保存 ---
+  // ※問題数が少ない復習モードの成績は最高記録には含めない
+  const bestScore = Number(localStorage.getItem(KEY_BEST_SCORE) || 0);
+  const bestCombo = Number(localStorage.getItem(KEY_BEST_COMBO) || 0);
+  const isNewScore = !isReview && score > bestScore;    // スコアの新記録か？
+  const isNewCombo = !isReview && maxCombo > bestCombo; // コンボの新記録か？
+  if (isNewScore) localStorage.setItem(KEY_BEST_SCORE, score);
+  if (isNewCombo) localStorage.setItem(KEY_BEST_COMBO, maxCombo);
+
+  // 最高記録を表示（新記録なら「NEW!」バッジを付ける）
+  $("statBestScore").innerHTML =
+    `${isNewScore ? score : bestScore}問` + (isNewScore ? '<span class="new-record">NEW!</span>' : "");
+  $("statBestCombo").innerHTML =
+    `${isNewCombo ? maxCombo : bestCombo}連続` + (isNewCombo ? '<span class="new-record">NEW!</span>' : "");
+
+  // --- 復習モードボタンの表示切り替え ---
+  // 間違えた問題があるときだけ「復習する」ボタンを出す
+  const reviewBtn = $("reviewBtn");
+  if (wrongList.length > 0) {
+    reviewBtn.style.display = "inline-block";
+    reviewBtn.textContent = `📖 間違えた${wrongList.length}問を復習する`;
+  } else {
+    reviewBtn.style.display = "none";
+  }
+
+  // --- ランクに応じたメッセージ ---
+  const messages = {
+    S: "🌟 パーフェクト！必要十分マスター！",
+    A: "🔥 すばらしい！あと少しで完全制覇！",
+    B: "👍 合格ライン！間違えた問題の反例を確認しよう！",
+    C: "💪 いい調子！「反例を探すクセ」をつけよう！",
+    D: "📘 「⇒が成り立つか？反例はないか？」を意識してもう一度！",
+  };
+  // 復習モードで全問正解できたら、克服メッセージを優先して表示
+  if (isReview && wrongList.length === 0) {
+    $("finalMsg").textContent = "🎉 復習完了！苦手を全部克服できました！";
+  } else if (isReview) {
+    $("finalMsg").textContent = "📖 まだ間違えた問題があります。繰り返して定着させよう！";
+  } else {
+    $("finalMsg").textContent = messages[rankChar];
+  }
+}
+
+// ページを開いたらゲーム開始
+startGame();
+</script>
+</body>
+</html>
