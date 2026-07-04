@@ -1,0 +1,340 @@
+/* ==============================================
+   style.css — ゲーム全体のデザイン
+   スマホ縦画面を最優先。ボタンは親指で押しやすく大きく。
+   色は「変数」でまとめて定義してあるので、
+   ここを変えるだけでテーマカラーを一括変更できます。
+   ============================================== */
+
+:root {
+  --bg: #0f172a;          /* 背景（濃い紺） */
+  --bg-card: #1e293b;     /* カードの背景 */
+  --bg-card2: #273549;    /* カードの背景（少し明るい） */
+  --text: #e2e8f0;        /* 基本の文字色 */
+  --text-dim: #94a3b8;    /* 薄い文字色 */
+  --primary: #38bdf8;     /* メインカラー（水色） */
+  --accent: #fbbf24;      /* アクセント（金色） */
+  --correct: #4ade80;     /* 正解の緑 */
+  --wrong: #f87171;       /* 不正解の赤 */
+  --radius: 16px;         /* 角丸の大きさ */
+}
+
+/* --- 全体の基本設定 --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  /* ダブルタップ拡大などを防ぎ、ゲーム操作を快適にする */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+#app {
+  max-width: 480px;        /* スマホ幅を基準に。PCでも中央に表示 */
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 12px 14px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- 画面切り替え（.active の画面だけ表示する） --- */
+.screen { display: none; flex: 1; flex-direction: column; animation: fadeIn 0.3s ease; }
+.screen.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== ボタン ==================== */
+.btn {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--text);
+  background: var(--bg-card2);
+  padding: 14px;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+.btn:active { transform: scale(0.96); filter: brightness(1.2); }
+
+.btn-big { min-height: 64px; font-size: 1.3rem; }
+.btn-small { font-size: 0.85rem; padding: 10px; }
+
+.btn-primary { background: linear-gradient(135deg, #0ea5e9, #2563eb); box-shadow: 0 4px 14px rgba(14,165,233,0.4); }
+.btn-accent  { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 14px rgba(245,158,11,0.4); }
+.btn-ghost   { background: transparent; border: 1px solid #334155; color: var(--text-dim); }
+
+/* 回答ボタン（親指で押しやすい大きさ） */
+.answer-row {          /* 横並び3つ（逆・裏・対偶） */
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: auto;    /* 画面の下側＝親指の位置に配置 */
+  padding-bottom: 8px;
+}
+.answer-stack {        /* 縦積み（数式など長い選択肢用） */
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+  padding-bottom: 8px;
+}
+.answer-btn {
+  border: 2px solid #334155;
+  border-radius: var(--radius);
+  background: var(--bg-card2);
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: bold;
+  min-height: 68px;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+.answer-btn:active { transform: scale(0.95); }
+.answer-btn.correct { background: var(--correct); border-color: var(--correct); color: #052e16; animation: pop 0.3s ease; }
+.answer-btn.wrong   { background: var(--wrong); border-color: var(--wrong); color: #450a0a; animation: shake 0.3s ease; }
+
+@keyframes pop {
+  0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); } 75% { transform: translateX(8px); }
+}
+
+/* ==================== タイトル画面 ==================== */
+.title-wrap { margin: auto 0; text-align: center; }
+.title-deco {
+  font-size: 2.2rem;
+  color: var(--primary);
+  font-weight: bold;
+  animation: float 2.5s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); }
+}
+.game-title {
+  font-size: 2.6rem;
+  line-height: 1.2;
+  margin: 12px 0 8px;
+  background: linear-gradient(135deg, #38bdf8, #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.subtitle { color: var(--text-dim); margin-bottom: 16px; }
+.title-formulas {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+}
+.title-formulas span { background: var(--bg-card); padding: 6px 10px; border-radius: 8px; }
+
+/* ==================== レベル選択 ==================== */
+.screen-heading { text-align: center; margin: 12px 0 16px; font-size: 1.5rem; }
+.level-list { display: grid; gap: 12px; }
+.level-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 2px solid #334155;
+  border-radius: var(--radius);
+  padding: 14px;
+  width: 100%;
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.08s ease;
+}
+.level-card:active { transform: scale(0.97); }
+.level-card .lv-icon { font-size: 2rem; }
+.level-card .lv-name { font-weight: bold; font-size: 1.15rem; }
+.level-card .lv-desc { color: var(--text-dim); font-size: 0.85rem; margin-top: 2px; }
+.level-card .lv-status { margin-left: auto; font-size: 0.8rem; text-align: right; }
+.level-card.cleared { border-color: var(--correct); }
+.level-card.locked { opacity: 0.45; filter: grayscale(0.8); }
+
+/* ==================== ゲーム中の共通パーツ ==================== */
+/* 上部のステータスバー */
+.hud {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.hud-item:last-child { margin-left: auto; }
+.btn-quit {
+  background: var(--bg-card);
+  border: 1px solid #334155;
+  color: var(--text-dim);
+  border-radius: 10px;
+  width: 40px; height: 40px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.combo { color: var(--accent); font-weight: bold; }
+.combo.pop { animation: pop 0.25s ease; }
+
+/* キャラクターとセリフの吹き出し */
+.chara-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; position: relative; }
+.chara { font-size: 2.6rem; }
+.chara.big { font-size: 3.4rem; }
+.chara.hit { animation: shake 0.35s ease; }
+.bubble {
+  background: var(--bg-card);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.bubble.shout { font-size: 1.6rem; font-weight: bold; color: var(--accent); justify-content: center; animation: pop 0.25s ease; }
+.bubble.taunt { font-style: normal; }
+
+/* 制限時間バー */
+.timebar {
+  height: 8px;
+  background: var(--bg-card);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.timebar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--correct), var(--accent), var(--wrong));
+  border-radius: 4px;
+}
+
+/* 問題カード */
+.q-card {
+  background: var(--bg-card);
+  border: 1px solid #334155;
+  border-radius: var(--radius);
+  padding: 18px 14px;
+  text-align: center;
+  margin-bottom: 14px;
+}
+.q-card.flash-correct { animation: flashGreen 0.4s ease; }
+.q-card.flash-wrong   { animation: flashRed 0.4s ease; }
+@keyframes flashGreen { 0% { box-shadow: 0 0 0 rgba(74,222,128,0); } 50% { box-shadow: 0 0 24px rgba(74,222,128,0.8); } }
+@keyframes flashRed   { 0% { box-shadow: 0 0 0 rgba(248,113,113,0); } 50% { box-shadow: 0 0 24px rgba(248,113,113,0.8); } }
+
+.q-label { font-size: 0.8rem; color: var(--text-dim); margin: 6px 0 4px; }
+.q-main {
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+.q-main.small { font-size: 1.25rem; }
+.q-main.accent { color: var(--accent); }
+.accent-strong { color: var(--accent); font-weight: bold; }
+
+/* ==================== Lv3 探偵の演出 ==================== */
+.case-file { border-left: 6px solid var(--accent); text-align: left; }
+.case-no {
+  display: inline-block;
+  background: var(--accent);
+  color: #451a03;
+  font-weight: bold;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  padding: 3px 10px;
+  margin-bottom: 6px;
+}
+/* 論理ボール（正解時に犯人へ飛んでいく） */
+#lv3-ball {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  font-size: 1.6rem;
+  opacity: 0;
+  pointer-events: none;
+}
+#lv3-ball.kick { animation: kickBall 0.6s ease-out forwards; }
+@keyframes kickBall {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(260px, 40px) rotate(720deg) scale(1.4); }
+}
+
+/* ==================== Lv4 リズム修行 ==================== */
+.rhythm-command { text-align: center; font-size: 1.2rem; margin-bottom: 10px; }
+.lane {
+  position: relative;
+  height: 90px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid #334155;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+/* 中央の判定ゾーン */
+.lane-zone {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 50%;   /* Good判定の範囲（GOOD_RANGE 0.25 × 2）と見た目を一致させる */
+  height: 100%;
+  transform: translateX(-50%);
+  background: rgba(56, 189, 248, 0.15);
+  border-left: 2px dashed var(--primary);
+  border-right: 2px dashed var(--primary);
+}
+/* 流れてくる問題カード */
+.lane-note {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  white-space: nowrap;
+  will-change: left;
+}
+/* Perfect / Good / Miss の表示 */
+.judge-text {
+  text-align: center;
+  height: 2rem;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+.judge-text.perfect { color: var(--accent); animation: pop 0.3s ease; }
+.judge-text.good    { color: var(--correct); animation: pop 0.3s ease; }
+.judge-text.miss    { color: var(--wrong); animation: shake 0.3s ease; }
+
+/* ==================== 結果画面 ==================== */
+.result-wrap { margin: auto 0; text-align: center; }
+.result-badge { font-size: 4rem; animation: pop 0.5s ease; }
+.result-lines { margin: 16px 0 24px; color: var(--text-dim); line-height: 2; font-size: 1.05rem; }
+.result-lines strong { color: var(--accent); font-size: 1.3rem; }
+.result-buttons { display: grid; gap: 4px; }
+
+/* ==================== 小さい画面への微調整 ==================== */
+@media (max-height: 640px) {
+  .q-main { font-size: 1.6rem; }
+  .chara { font-size: 2rem; }
+  .answer-btn { min-height: 56px; }
+}

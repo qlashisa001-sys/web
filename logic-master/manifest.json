@@ -1,0 +1,19 @@
+{
+  "name": "論理マスターへの道",
+  "short_name": "論理マスター",
+  "description": "高校数学「逆・裏・対偶」をゲーム感覚で反復練習",
+  "lang": "ja",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

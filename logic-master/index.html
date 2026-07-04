@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- ==============================================
+       index.html — ゲームの画面の「骨組み」
+       このファイルを開くだけでゲームが動きます。
+       各レベルの画面は <section class="screen"> で分かれていて、
+       JavaScript で1つだけ表示を切り替えています。
+       ============================================== -->
+  <meta charset="UTF-8">
+  <!-- スマホで拡大縮小されないようにする設定 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <title>論理マスターへの道</title>
+
+  <!-- PWA用の設定ファイル -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <!-- 見た目（デザイン）のファイル -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= タイトル画面 ================= -->
+  <section id="screen-title" class="screen active">
+    <div class="title-wrap">
+      <div class="title-deco">P → Q</div>
+      <h1 class="game-title">論理マスター<br>への道</h1>
+      <p class="subtitle">〜 逆・裏・対偶 反射トレーニング 〜</p>
+      <div class="title-formulas">
+        <span>逆：Q → P</span>
+        <span>裏：¬P → ¬Q</span>
+        <span>対偶：¬Q → ¬P</span>
+      </div>
+      <button id="btn-start" class="btn btn-primary btn-big">▶ はじめる</button>
+      <button id="btn-sound" class="btn btn-ghost">🔊 効果音 ON</button>
+    </div>
+  </section>
+
+  <!-- ================= レベル選択画面 ================= -->
+  <section id="screen-select" class="screen">
+    <h2 class="screen-heading">レベル選択</h2>
+    <div id="level-list" class="level-list">
+      <!-- レベルのカードは main.js が自動で作ります -->
+    </div>
+    <button id="btn-reset" class="btn btn-ghost btn-small">進行データをリセット</button>
+  </section>
+
+  <!-- ================= Lv1 新人（論理訓練所） ================= -->
+  <section id="screen-lv1" class="screen lv1">
+    <header class="hud">
+      <button class="btn-quit" data-quit>←</button>
+      <span id="lv1-progress" class="hud-item">1 / 20</span>
+      <span id="lv1-correct" class="hud-item">正解 0</span>
+    </header>
+    <div class="chara-row">
+      <div class="chara">🎖️</div>
+      <div class="bubble" id="lv1-coach">まだ考えるな！反射で答えろ！</div>
+    </div>
+    <div class="timebar"><div class="timebar-fill" id="lv1-timebar"></div></div>
+    <div class="q-card" id="lv1-card">
+      <div class="q-label">元の命題</div>
+      <div class="q-main" id="lv1-original">P → Q</div>
+      <div class="q-label">↓ この命題は何？</div>
+      <div class="q-main accent" id="lv1-target">¬Q → ¬P</div>
+    </div>
+    <div class="answer-row" id="lv1-answers">
+      <!-- 逆・裏・対偶 のボタンは lv1.js が作ります -->
+    </div>
+  </section>
+
+  <!-- ================= Lv2 見習い（矢印道場） ================= -->
+  <section id="screen-lv2" class="screen lv2">
+    <header class="hud">
+      <button class="btn-quit" data-quit>←</button>
+      <span id="lv2-progress" class="hud-item">1 / 20</span>
+      <span id="lv2-combo" class="hud-item combo"></span>
+      <span id="lv2-acc" class="hud-item">正答率 --%</span>
+    </header>
+    <div class="chara-row">
+      <div class="chara">🥋</div>
+      <div class="bubble shout" id="lv2-shout">対偶！</div>
+    </div>
+    <div class="timebar"><div class="timebar-fill" id="lv2-timebar"></div></div>
+    <div class="q-card" id="lv2-card">
+      <div class="q-label">元の命題</div>
+      <div class="q-main" id="lv2-original">P → Q</div>
+      <div class="q-label">↓ 師範の言う形をタップ！</div>
+    </div>
+    <div class="answer-stack" id="lv2-answers">
+      <!-- 数式ボタンは lv2.js が作ります -->
+    </div>
+  </section>
+
+  <!-- ================= Lv3 命題探偵（事件ファイル） ================= -->
+  <section id="screen-lv3" class="screen lv3">
+    <header class="hud">
+      <button class="btn-quit" data-quit>←</button>
+      <span id="lv3-progress" class="hud-item">事件 1 / 10</span>
+      <span id="lv3-solved" class="hud-item">解決 0</span>
+    </header>
+    <div class="chara-row">
+      <div class="chara" id="lv3-detective">🕵️</div>
+      <div class="bubble" id="lv3-line">論理探偵メイダイ、参上。犯人を挙げるぞ。</div>
+      <div id="lv3-ball">⚽</div>
+    </div>
+    <div class="q-card case-file" id="lv3-card">
+      <div class="case-no" id="lv3-caseno">事件 No.15</div>
+      <div class="q-label">元の命題</div>
+      <div class="q-main small" id="lv3-original">x=2 ならば x²=4</div>
+      <div class="q-label">現場に残された命題（犯人はどの変形？）</div>
+      <div class="q-main small accent" id="lv3-suspect">x²=4 ならば x=2</div>
+    </div>
+    <div class="answer-stack" id="lv3-answers">
+      <!-- A/B/C の容疑者ボタンは lv3.js が作ります -->
+    </div>
+  </section>
+
+  <!-- ================= Lv4 対偶の達人（リズム修行） ================= -->
+  <section id="screen-lv4" class="screen lv4">
+    <header class="hud">
+      <button class="btn-quit" data-quit>←</button>
+      <span id="lv4-progress" class="hud-item">1 / 20</span>
+      <span id="lv4-combo" class="hud-item combo"></span>
+      <span id="lv4-score" class="hud-item">0 pt</span>
+    </header>
+    <div class="rhythm-command">
+      指令：<span id="lv4-command" class="accent-strong">対偶！</span>
+    </div>
+    <!-- 問題カードが右から左へ流れるレーン -->
+    <div class="lane" id="lv4-lane">
+      <div class="lane-zone" id="lv4-zone"></div>
+      <div class="lane-note" id="lv4-note">P → Q</div>
+    </div>
+    <div class="judge-text" id="lv4-judge"></div>
+    <div class="answer-stack" id="lv4-answers">
+      <!-- 数式ボタンは lv4.js が作ります -->
+    </div>
+  </section>
+
+  <!-- ================= Lv5 論理王（論理バトル） ================= -->
+  <section id="screen-lv5" class="screen lv5">
+    <header class="hud">
+      <button class="btn-quit" data-quit>←</button>
+      <span class="hud-item">あなた <span id="lv5-php">❤️❤️❤️</span></span>
+      <span class="hud-item">ロンパ卿 <span id="lv5-ehp"></span></span>
+    </header>
+    <div class="chara-row battle">
+      <div class="chara big" id="lv5-enemy">🎩</div>
+      <div class="bubble taunt" id="lv5-taunt">ようこそ。私が論客ロンパ卿です。</div>
+    </div>
+    <div class="timebar"><div class="timebar-fill" id="lv5-timebar"></div></div>
+    <div class="q-card" id="lv5-card">
+      <div class="q-label" id="lv5-label">この命題は何？</div>
+      <div class="q-main small" id="lv5-original">P → Q</div>
+      <div class="q-main small accent" id="lv5-target">¬Q → ¬P</div>
+    </div>
+    <div class="answer-stack" id="lv5-answers"></div>
+  </section>
+
+  <!-- ================= 結果画面（全レベル共通） ================= -->
+  <section id="screen-result" class="screen">
+    <div class="result-wrap">
+      <div id="result-badge" class="result-badge">🏆</div>
+      <h2 id="result-title" class="screen-heading">クリア！</h2>
+      <div id="result-lines" class="result-lines"></div>
+      <div class="result-buttons">
+        <button id="btn-next" class="btn btn-accent btn-big">次のレベルへ ▶</button>
+        <button id="btn-retry" class="btn btn-primary btn-big">もう一度</button>
+        <button id="btn-to-select" class="btn btn-ghost">レベル選択へ</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- JavaScript は役割ごとにファイルを分けています（読み込み順が大事） -->
+<script src="js/questions.js"></script> <!-- 問題データ -->
+<script src="js/audio.js"></script>     <!-- 効果音 -->
+<script src="js/storage.js"></script>   <!-- セーブデータ -->
+<script src="js/main.js"></script>      <!-- 画面切り替え・共通処理 -->
+<script src="js/lv1.js"></script>
+<script src="js/lv2.js"></script>
+<script src="js/lv3.js"></script>
+<script src="js/lv4.js"></script>
+<script src="js/lv5.js"></script>
+</body>
+</html>
